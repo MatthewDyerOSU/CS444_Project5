@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 
 // represents open file (set within image_open())
 int image_fd;

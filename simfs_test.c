@@ -1,10 +1,25 @@
+#define CTEST_ENABLE
 #include "ctest.h"
 #include "image.h"
 
 
 #ifdef CTEST_ENABLE
-int main(int argc, char *argv[]) {
-    int fd = image_open();
-    int closed_bool = image_close();
-    
+
+
+void test_non_existent_image_open_and_close(void) {
+    image_fd = image_open("test.txt", 0);
+    CTEST_ASSERT(image_fd != -1, "Test opening non-existent file");
+    CTEST_ASSERT(image_close() != -1, "Test closing newly made file");
 }
+
+
+int main(void) {
+    CTEST_VERBOSE(1);
+
+    test_non_existent_image_open_and_close();
+
+    CTEST_RESULTS();
+
+    CTEST_EXIT();
+}
+#endif

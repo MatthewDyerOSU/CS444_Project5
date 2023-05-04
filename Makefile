@@ -1,10 +1,10 @@
-myprog: simfs_test.o mylib.a
-	gcc -o $@ $^
+simfs_test: simfs_test.o simfs.a
+	gcc -o $@ $^ 
 
 simfs_test.o: simfs_test.c
-	gcc -Wall -Wextra -c $<
+	gcc -Wall -Wextra -c $< 
 
-mylib.a: image.o
+simfs.a: image.o
 	ar rcs $@ $^
 
 image.o: image.c
@@ -15,5 +15,5 @@ image.o: image.c
 clean:
 	rm -f *.o
 
-test: myprog
-	./myprog
+test: simfs_test
+	./simfs_test
