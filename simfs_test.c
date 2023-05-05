@@ -73,9 +73,26 @@ void test_setting_with_set_free(void) {
 }
 
 void test_clearing_with_set_free(void) {
-    unsigned char block[1] = {0xff};
+    unsigned char block[1] = {0xFF};
     set_free(block, 4, 0);
     CTEST_ASSERT(block[0] == 0xEF, "Testing clearing a bit with set_free()");
+}
+
+void test_find_free_all_bits_set(void) {
+    unsigned char *block = malloc(BLOCK_SIZE);
+    memset(block, 0xFF, BLOCK_SIZE);
+    int free_bit = find_free(block);
+    CTEST_ASSERT(free_bit == -1, "Testing find_free when all bits are set");
+    free(block);
+}
+
+void test_find_free_one_bit_clear(void) {
+    unsigned char *block = malloc(BLOCK_SIZE);
+    memset(block, 0xFF, BLOCK_SIZE);
+    block[4] = 0xEF;
+    int free_bit = find_free(block);
+    CTEST_ASSERT(free_bit == 4, "Testing find_free when 1 bit in the 5th byte is clear");
+    free(block);
 }
 
 
@@ -94,6 +111,8 @@ int main(void) {
     // free.c - set_free(), find_free()
     test_setting_with_set_free();
     test_clearing_with_set_free();
+    test_find_free_all_bits_set();
+    test_find_free_one_bit_clear();
 
 
     CTEST_RESULTS();
