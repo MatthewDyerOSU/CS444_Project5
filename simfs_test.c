@@ -5,12 +5,22 @@
 #include "ctest.h"
 #include "image.h"
 #include "block.h"
+#include "free.h"
 
 #define BLOCK_SIZE 4096
 #define TEST_BLOCK_NUM 3
+#define FREE_INODE_MAP_NUM 1
+#define FREE_BLOCK_MAP_NUM 2
 
 
 #ifdef CTEST_ENABLE
+
+// helper function to generate a block of random bytes
+void generate_block(unsigned char *block, int size) {
+    for(int i = 0; i < size; i++) {
+        block[i] = rand() % 256;
+    }
+}
 
 
 void test_non_existent_image_open_and_close(void) {
@@ -44,10 +54,7 @@ void test_bwrite_and_bread(void) {
     unsigned char *block1 = malloc(BLOCK_SIZE);
     unsigned char *block2 = malloc(BLOCK_SIZE);
 
-    srand(time(NULL));
-    for(int i = 0; i < BLOCK_SIZE; i++) {
-        block1[i] = rand() % 256;
-    }
+    generate_block(block1, BLOCK_SIZE);
 
     bwrite(TEST_BLOCK_NUM, block1);
 
@@ -59,13 +66,17 @@ void test_bwrite_and_bread(void) {
     free(block2);
 }
 
-// void test_bread(void) {
-//     image_fd = image_open("existing_test.txt", 0);
-//     unsigned char test_array[BLOCK_SIZE] = {0};
-//     unsigned char *new_array = bread(2, test_array);
-//     int difference = memcmp(new_array, test_array, BLOCK_SIZE);
-//     CTEST_ASSERT(difference == 0, "Testing functionality of fresh baked bread()");
-// }
+void test_setting_with_set_free(void) {
+    unsigned char block[2] = {0x00, 0x00};
+    set_free(block, 0, 1);
+    CTEST_ASSERT(block[0] == 0x01, "Testing setting a bit with set_free()");
+}
+
+void test_clearing_with_set_free(void) {
+    unsigned char block[1] = {0xff};
+    set_free(block, 4, 0);
+    CTEST_ASSERT(block[0] == 0xEF, "Testing clearing a bit with set_free()");
+}
 
 
 int main(void) {
@@ -79,6 +90,11 @@ int main(void) {
 
     // block.c - bread(), bwrite()
     test_bwrite_and_bread();
+
+    // free.c - set_free(), find_free()
+    test_setting_with_set_free();
+    test_clearing_with_set_free();
+
 
     CTEST_RESULTS();
 

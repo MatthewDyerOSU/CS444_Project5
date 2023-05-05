@@ -4,13 +4,16 @@ simfs_test: simfs_test.o simfs.a
 simfs_test.o: simfs_test.c
 	gcc -Wall -Wextra -c $< 
 
-simfs.a: image.o block.o
+simfs.a: image.o block.o free.o
 	ar rcs $@ $^
+
+image.o: image.c
+	gcc -Wall -Wextra -c $<
 
 block.o: block.c
 	gcc -Wall -Wextra -c $<
 
-image.o: image.c
+free.o: free.c
 	gcc -Wall -Wextra -c $<
 
 .PHONY: clean test
