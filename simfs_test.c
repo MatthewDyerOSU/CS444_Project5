@@ -6,6 +6,7 @@
 #include "image.h"
 #include "block.h"
 #include "free.h"
+#include "inode.h"
 
 #define BLOCK_SIZE 4096
 #define TEST_BLOCK_NUM 3
@@ -22,16 +23,15 @@ void generate_block(unsigned char *block, int size) {
     }
 }
 
-
 void test_non_existent_image_open_and_close(void) {
-    image_fd = image_open("test.txt", 0);
+    image_fd = image_open("new_test.txt", 0);
     CTEST_ASSERT(image_fd != -1, "Test opening non-existent file");
     CTEST_ASSERT(image_close() != -1, "Test closing newly made file");
-    remove("test.txt");
+    remove("new_test.txt");
 }
 
 void test_existing_image_open_and_close(void) {
-    image_fd = image_open("existing_test.txt", 0);
+    image_fd = image_open("test.txt", 0);
     CTEST_ASSERT(image_fd != -1, "Test opening existing file");
     CTEST_ASSERT(image_close() != -1, "Test closing existing file");
 }
@@ -95,6 +95,44 @@ void test_find_free_one_bit_clear(void) {
     free(block);
 }
 
+void test_ialloc_no_free_inode(void) {
+    image_fd = image_open("test.txt", 0);
+    unsigned char inode_map[BLOCK_SIZE];
+    memset(inode_map, 0xFF, BLOCK_SIZE);
+    bwrite(FREE_INODE_MAP_NUM, inode_map);
+    int byte_index = ialloc();
+    CTEST_ASSERT(byte_index == -1, "Testing ialloc when no free inode is available");
+}
+
+void test_ialloc_free_inode_found(void) {
+    image_fd = image_open("test.txt", 0);
+    unsigned char inode_map[BLOCK_SIZE];
+    memset(inode_map, 0xFF, BLOCK_SIZE);
+    set_free(inode_map, 0, 0);
+    bwrite(FREE_INODE_MAP_NUM, inode_map);
+    int byte_index = ialloc();
+    CTEST_ASSERT(byte_index == 0, "Testing allocating an inode");
+}
+
+void test_alloc_no_free_block(void) {
+    image_fd = image_open("test.txt", 0);
+    unsigned char block_map[BLOCK_SIZE];
+    memset(block_map, 0xFF, BLOCK_SIZE);
+    bwrite(FREE_BLOCK_MAP_NUM, block_map);
+    int byte_index = alloc();
+    CTEST_ASSERT(byte_index == -1, "Testing alloc when no free block is available");
+}
+
+void test_alloc_free_block_found(void) {
+    image_fd = image_open("test.txt", 0);
+    unsigned char block_map[BLOCK_SIZE];
+    memset(block_map, 0xFF, BLOCK_SIZE);
+    set_free(block_map, 0, 0);
+    bwrite(FREE_BLOCK_MAP_NUM, block_map);
+    int byte_index = alloc();
+    CTEST_ASSERT(byte_index == 0, "Testing allocating a block");
+}
+
 
 int main(void) {
     CTEST_VERBOSE(1);
@@ -113,6 +151,14 @@ int main(void) {
     test_clearing_with_set_free();
     test_find_free_all_bits_set();
     test_find_free_one_bit_clear();
+
+    // inode.c, block.c - ialloc(), alloc()
+    test_ialloc_no_free_inode();
+    test_ialloc_free_inode_found();
+    test_alloc_no_free_block();
+    test_alloc_free_block_found();
+
+    // mkfs.c - mkfs()
 
 
     CTEST_RESULTS();

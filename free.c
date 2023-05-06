@@ -19,7 +19,7 @@ void set_free(unsigned char *block, int num, int set) {
     int byte_num = num / 8;
     int bit_num = num % 8;
     if(set != 0 && set != 1) {
-        perror("Error: Invalid Argument, set needs to be a 1 or 0");
+        perror("Error: Invalid Argument, set needs to be a 1 or 0\n");
         exit(EXIT_FAILURE);
     }
     if(set == 1) {
@@ -30,7 +30,7 @@ void set_free(unsigned char *block, int num, int set) {
     }
 }
 
-// find a 0 bit and return its index (block num that corresponds to this bit)
+// find a 0 bit and return its index (byte num that corresponds to this bit)
 // returns -1 if no free bit found
 int find_free(unsigned char *block) {
     int index = -1;

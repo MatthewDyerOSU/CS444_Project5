@@ -13,13 +13,13 @@ int image_open(char *filename, int truncate) {
     if(truncate) {
         image_fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
         if(image_fd == -1) {
-            perror("Error opening file");
+            perror("Error opening file\n");
         }
     }
     else {
         image_fd = open(filename, O_RDWR | O_CREAT, 0600);
         if(image_fd == -1) {
-            perror("Error opening file");
+            perror("Error opening file\n");
         }
     }
     return image_fd;
@@ -29,7 +29,7 @@ int image_open(char *filename, int truncate) {
 int image_close(void){
     int ret = close(image_fd);
     if(ret == -1) {
-        perror("Error closing file");
+        perror("Error closing file\n");
     }
     return ret;
 }
