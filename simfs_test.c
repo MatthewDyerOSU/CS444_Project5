@@ -2,17 +2,18 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include "ctest.h"
 #include "image.h"
 #include "block.h"
 #include "free.h"
 #include "inode.h"
+#include "mkfs.h"
 
 #define BLOCK_SIZE 4096
 #define TEST_BLOCK_NUM 3
 #define FREE_INODE_MAP_NUM 1
 #define FREE_BLOCK_MAP_NUM 2
-
 
 #ifdef CTEST_ENABLE
 
@@ -49,7 +50,7 @@ void test_image_close_fail(void) {
 }
 
 void test_bwrite_and_bread(void) {
-    image_fd = image_open("existing_test.txt", 0);
+    image_fd = image_open("test.txt", 0);
 
     unsigned char *block1 = malloc(BLOCK_SIZE);
     unsigned char *block2 = malloc(BLOCK_SIZE);
@@ -133,6 +134,24 @@ void test_alloc_free_block_found(void) {
     CTEST_ASSERT(byte_index == 0, "Testing allocating a block");
 }
 
+void test_mkfs(void) {
+    image_fd = image_open("test", 0);
+    mkfs();
+    unsigned char block[BLOCK_SIZE];
+    for(int i = 0; i < 7; i++) {
+        off_t block_offset = i * BLOCK_SIZE;
+        ssize_t bytes_read = pread(image_fd, block, BLOCK_SIZE, block_offset);
+        if(bytes_read == -1) {
+            perror("Error reading block");
+            exit(EXIT_FAILURE);
+        }
+        fprintf(stderr, "block[0] = %d\n", block[0]);
+        int clear_bit_index = find_low_clear_bit(block[0]);
+        CTEST_ASSERT(clear_bit_index == 0, "Testing block allocation");
+    }
+    remove("test");
+}
+
 
 int main(void) {
     CTEST_VERBOSE(1);
@@ -159,6 +178,7 @@ int main(void) {
     test_alloc_free_block_found();
 
     // mkfs.c - mkfs()
+    test_mkfs();
 
 
     CTEST_RESULTS();
