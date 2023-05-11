@@ -37,7 +37,7 @@ int find_free(unsigned char *block) {
     for(int i = 0; i < BLOCK_SIZE; i++) {
         int free_bit = find_low_clear_bit(block[i]);
         if(free_bit != -1) {
-            index = i;
+            index = i * 8 + free_bit;
             break;
         }
     }

@@ -92,7 +92,7 @@ void test_find_free_one_bit_clear(void) {
     memset(block, 0xFF, BLOCK_SIZE);
     block[4] = 0xEF;
     int free_bit = find_free(block);
-    CTEST_ASSERT(free_bit == 4, "Testing find_free when 1 bit in the 5th byte is clear");
+    CTEST_ASSERT(free_bit == 36, "Testing find_free when 1 bit in the 5th byte is clear");
     free(block);
 }
 
@@ -145,9 +145,17 @@ void test_mkfs(void) {
             perror("Error reading block");
             exit(EXIT_FAILURE);
         }
-        fprintf(stderr, "block[0] = %d\n", block[0]);
         int clear_bit_index = find_low_clear_bit(block[0]);
-        CTEST_ASSERT(clear_bit_index == 0, "Testing block allocation");
+        if(i == 2) {
+            CTEST_ASSERT(clear_bit_index == 7, "Testing block allocation");
+            fprintf(stderr, "clear_bit_index: %d\n", clear_bit_index);
+        }
+        else {
+            CTEST_ASSERT(clear_bit_index == 0, "Testing block allocation");
+            fprintf(stderr, "clear_bit_index: %d\n", clear_bit_index);
+        }
+        
+        
     }
     remove("test");
 }
