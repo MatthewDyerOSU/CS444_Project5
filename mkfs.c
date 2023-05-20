@@ -16,8 +16,7 @@
 void mkfs(void){
 
     // create a block and set all bytes to 0
-    char block[BLOCK_SIZE];
-    memset(block, 0, BLOCK_SIZE);
+    char block[BLOCK_SIZE] = {0};
 
     // loop through 1024 blocks, setting every block to a block of all 0 bytes
     for(int i = 0; i < NUM_BLOCKS; i++) {

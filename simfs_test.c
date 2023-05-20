@@ -160,6 +160,11 @@ void test_mkfs(void) {
     remove("test");
 }
 
+void test_find_incore_free(void) {
+    fill_incore_for_test();
+    struct inode* find_incore_free_result = find_incore_free();
+    CTEST_ASSERT(find_incore_free_result == NULL, "Testing failure of find_incore_free()");
+}
 
 int main(void) {
     CTEST_VERBOSE(1);
@@ -187,6 +192,9 @@ int main(void) {
 
     // mkfs.c - mkfs()
     test_mkfs();
+
+    // inode.c
+    test_find_incore_free();
 
 
     CTEST_RESULTS();

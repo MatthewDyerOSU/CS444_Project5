@@ -2,10 +2,13 @@
 #include "block.h"
 #include "free.h"
 #include "image.h"
+#include "pack.h"
+#include "inode.h"
 
-#define BLOCK_SIZE 4096
+#define INODE_SIZE 64
 #define FREE_INODE_MAP_NUM 1 
 
+static struct inode incore[MAX_SYS_OPEN_FILES] = {0};
 
 // allocate a previously free inode in the inode map
 int ialloc(void) {
@@ -27,3 +30,34 @@ int ialloc(void) {
     free(buffer);
     return byte_index;
 }
+
+struct inode *find_incore_free(void) {
+    for(int i = 0; i < MAX_SYS_OPEN_FILES; i++) {
+        if(incore[i].ref_count == 0) {
+            return &incore[i];
+        }
+    }
+    return NULL;
+}
+
+struct inode *find_incore(unsigned int inode_num) {
+    for(int i = 0; i < MAX_SYS_OPEN_FILES; i++) {
+        if(incore[i].ref_count == 0 && incore[i].inode_num == inode_num) {
+            return &incore[i];
+        }
+    }
+    return NULL;
+}
+
+void fill_incore_for_test(void) {
+    for(int i = 0; i < MAX_SYS_OPEN_FILES; i++) {
+        incore[i].ref_count = 1;
+        incore[i].inode_num = i+1;
+    }
+}
+
+void set_free_in_incore(void) {
+    incore[9].ref_count = 0;
+    // inode_num should be 10
+}
+
