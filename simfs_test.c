@@ -167,6 +167,17 @@ void test_find_incore_free(void) {
     set_free_in_incore();
     find_incore_free_result = find_incore_free();
     CTEST_ASSERT(find_incore_free_result != NULL, "Testing success of find_incore_free()");
+    free_all_incore();
+}
+
+void test_find_incore(void) {
+    fill_incore_for_test();
+    struct inode* find_incore_result = find_incore(10);
+    CTEST_ASSERT(find_incore_result == NULL, "Testing failure of find_incore()");
+    set_free_in_incore();
+    find_incore_result = find_incore(10);
+    CTEST_ASSERT(find_incore_result != NULL, "Testing success of find_incore()");
+    free_all_incore();
 }
 
 int main(void) {
@@ -196,9 +207,9 @@ int main(void) {
     // mkfs.c - mkfs()
     test_mkfs();
 
-    // inode.c
+    // inode.c again
     test_find_incore_free();
-
+    test_find_incore();
 
     CTEST_RESULTS();
 

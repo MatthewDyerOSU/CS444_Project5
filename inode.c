@@ -61,3 +61,9 @@ void set_free_in_incore(void) {
     // inode_num should be 10
 }
 
+void free_all_incore(void) {
+    for(int i = 0; i < MAX_SYS_OPEN_FILES; i++) {
+        incore[i].ref_count = 0;
+    }
+}
+

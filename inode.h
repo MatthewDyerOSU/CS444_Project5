@@ -23,5 +23,6 @@ struct inode *find_incore(unsigned int inode_num);
 //testing
 void fill_incore_for_test(void);
 void set_free_in_incore(void);
+void free_all_incore(void);
 
 #endif
