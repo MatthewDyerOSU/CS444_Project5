@@ -164,6 +164,9 @@ void test_find_incore_free(void) {
     fill_incore_for_test();
     struct inode* find_incore_free_result = find_incore_free();
     CTEST_ASSERT(find_incore_free_result == NULL, "Testing failure of find_incore_free()");
+    set_free_in_incore();
+    find_incore_free_result = find_incore_free();
+    CTEST_ASSERT(find_incore_free_result != NULL, "Testing success of find_incore_free()");
 }
 
 int main(void) {
