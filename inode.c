@@ -40,13 +40,16 @@ struct inode *find_incore_free(void) {
 // Takes an inode number and searches through incore array for that inode number and returns it if that inode is not being used
 struct inode *find_incore(unsigned int inode_num) {
     for(int i = 0; i < MAX_SYS_OPEN_FILES; i++) {
-        if(incore[i].ref_count == 0 && incore[i].inode_num == inode_num) {
+        if(incore[i].ref_count > 0 && incore[i].inode_num == inode_num) {
             return &incore[i];
         }
     }
     return NULL;
 }
 
+// Takes a pointer to an empty struct inode that data will be read into.
+// Maps inode_num to a block and offset.
+// Reads the data from disk into the block, then unpacks the data into the inode in.
 void read_inode(struct inode *in, int inode_num) {
     int block_num = inode_num / INODES_PER_BLOCK + INODE_FIRST_BLOCK;
     int block_offset = inode_num % INODES_PER_BLOCK;
@@ -63,6 +66,11 @@ void read_inode(struct inode *in, int inode_num) {
     }
 }
 
+// Stores the inode data pointed to by in on disk.
+// The inode_num field in the struct holds the number of the inode to be written.
+// Maps the inode number to a block and offset.
+// Reads the data from disk and packs the inode fields into the block.
+// Writes the block back out to disk.
 void write_inode(struct inode *in) {
     int inode_num = in->inode_num;
     int block_num = inode_num / INODES_PER_BLOCK + INODE_FIRST_BLOCK;
@@ -80,6 +88,9 @@ void write_inode(struct inode *in) {
     bwrite(block_num, block);
 }
 
+// Returns a pointer to an in-core inode for a given inode number.
+// If inode is already in-core, increments the ref_count field and returns a pointer.
+// If inode wasn't in-core, allocate space for it, load it up, set ref_count to 1, and return the pointer.
 struct inode *iget(int inode_num) {
     struct inode *incore_found = find_incore(inode_num);
     if(incore_found != NULL) {
@@ -96,6 +107,7 @@ struct inode *iget(int inode_num) {
     return incore_free;
 }
 
+// Frees the inode if it isn't being used.
 void iput(struct inode *in) {
     if(in->ref_count == 0) {
         return;

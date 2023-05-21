@@ -161,7 +161,7 @@ void test_mkfs(void) {
 
 void test_find_incore_free(void) {
     fill_incore_for_test();
-    struct inode* find_incore_free_result = find_incore_free();
+    struct inode *find_incore_free_result = find_incore_free();
     CTEST_ASSERT(find_incore_free_result == NULL, "Testing failure of find_incore_free()");
     set_free_in_incore();
     find_incore_free_result = find_incore_free();
@@ -170,10 +170,9 @@ void test_find_incore_free(void) {
 }
 
 void test_find_incore(void) {
-    fill_incore_for_test();
-    struct inode* find_incore_result = find_incore(10);
+    struct inode *find_incore_result = find_incore(10);
     CTEST_ASSERT(find_incore_result == NULL, "Testing failure of find_incore()");
-    set_free_in_incore();
+    fill_incore_for_test();
     find_incore_result = find_incore(10);
     CTEST_ASSERT(find_incore_result->inode_num == 10, "Testing success of find_incore()");
     free_all_incore();
@@ -240,6 +239,21 @@ void test_write_inode(void) {
     }
 }
 
+void test_iget(void) {
+    fill_incore_for_test();
+    struct inode *found_incore = iget(9);
+    CTEST_ASSERT(found_incore != NULL, "Testing iget() with full incore array");
+    CTEST_ASSERT(found_incore->ref_count == 2, "Testing iget() ref_count incrementing");
+    free_all_incore();
+    struct inode *new_incore = iget(9);
+    CTEST_ASSERT(new_incore != NULL, "Testing iget() with empty incore array");
+    CTEST_ASSERT(new_incore->ref_count == 1, "Testing iget() ref_count incrementing for newly allocated inode");
+}
+
+void test_iput(void) {
+
+}
+
 int main(void) {
     CTEST_VERBOSE(1);
 
@@ -272,6 +286,7 @@ int main(void) {
     test_find_incore();
     test_read_inode();
     test_write_inode();
+    test_iget();
 
     CTEST_RESULTS();
 
