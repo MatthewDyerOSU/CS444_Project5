@@ -208,7 +208,6 @@ void test_read_inode(void) {
 }
 
 void test_write_inode(void) {
-    // Create an inode with test data
     struct inode in;
     in.inode_num = 10;
     in.size = 1000;
@@ -222,12 +221,9 @@ void test_write_inode(void) {
     int block_num = in.inode_num / INODES_PER_BLOCK + INODE_FIRST_BLOCK;  
     int block_offset = in.inode_num % INODES_PER_BLOCK;
     int block_offset_bytes = block_offset * INODE_SIZE;
-    // Call the write_inode function
     write_inode(&in);
-
-    // Perform assertions to verify the results
     unsigned char block[BLOCK_SIZE] = {0};
-    bread(block_num, block);  // Read the written block
+    bread(block_num, block); 
 
     CTEST_ASSERT(read_u32(block + block_offset_bytes) == 1000, "Testing write_inode() size");
     CTEST_ASSERT(read_u16(block + block_offset_bytes + 4) == 1234, "Testing write_inode() owner_id");
@@ -251,7 +247,32 @@ void test_iget(void) {
 }
 
 void test_iput(void) {
-
+    struct inode in;
+    in.inode_num = 10;
+    in.size = 1000;
+    in.owner_id = 1234;
+    in.permissions = 7;
+    in.flags = 8;
+    in.link_count = 3;
+    for (int i = 0; i < INODE_PTR_COUNT; i++) {
+        in.block_ptr[i] = i + 1;
+    }
+    in.ref_count = 1;
+    int block_num = in.inode_num / INODES_PER_BLOCK + INODE_FIRST_BLOCK;  
+    int block_offset = in.inode_num % INODES_PER_BLOCK;
+    int block_offset_bytes = block_offset * INODE_SIZE;
+    unsigned char block[BLOCK_SIZE] = {0};
+    iput(&in);
+    bread(block_num, block);
+    CTEST_ASSERT(in.ref_count == 0, "Testing iput ref_count decrementing");
+    CTEST_ASSERT(read_u32(block + block_offset_bytes) == 1000, "Testing iput() size");
+    CTEST_ASSERT(read_u16(block + block_offset_bytes + 4) == 1234, "Testing iput() owner_id");
+    CTEST_ASSERT(read_u8(block + block_offset_bytes + 6) == 7, "Testing iput() permissions");
+    CTEST_ASSERT(read_u8(block + block_offset_bytes + 7) == 8, "Testing iput() flags");
+    CTEST_ASSERT(read_u8(block + block_offset_bytes + 8) == 3, "Testing iput() link_count");
+    for (int i = 0; i < INODE_PTR_COUNT; i++) {
+        CTEST_ASSERT(read_u16(block + block_offset_bytes + 9 + (i * 2)) == i + 1, "Testing iput() block pointers");
+    }
 }
 
 int main(void) {
