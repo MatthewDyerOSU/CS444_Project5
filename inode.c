@@ -9,7 +9,7 @@ static struct inode incore[MAX_SYS_OPEN_FILES] = {0};
 
 // allocate a previously free inode in the inode map
 int ialloc(void) {
-    unsigned char *buffer = malloc(BLOCK_SIZE);
+    unsigned char buffer[BLOCK_SIZE];
     // call bread() to get the inode map
     unsigned char *inode_map = bread(FREE_INODE_MAP_NUM, buffer);
 
@@ -24,7 +24,6 @@ int ialloc(void) {
 
     // call bwrite() to save the inode back out to disk
     bwrite(FREE_INODE_MAP_NUM, inode_map);
-    free(buffer);
     return byte_index;
 }
 
@@ -82,10 +81,30 @@ void write_inode(struct inode *in) {
 }
 
 struct inode *iget(int inode_num) {
-    
+    struct inode *incore_found = find_incore(inode_num);
+    if(incore_found != NULL) {
+        incore_found->ref_count++;
+        return incore_found;
+    }
+    struct inode *incore_free = find_incore_free();
+    if(incore_free == NULL) {
+        return NULL;
+    }
+    read_inode(incore_free, inode_num);
+    incore_free->ref_count = 1;
+    incore_free->inode_num = inode_num;
+    return incore_free;
 }
 
-
+void iput(struct inode *in) {
+    if(in->ref_count == 0) {
+        return;
+    }
+    in->ref_count--;
+    if(in->ref_count == 0) {
+        write_inode(in);
+    }
+}
 
 // Helper functions for testing
 void fill_incore_for_test(void) {

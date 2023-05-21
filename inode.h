@@ -29,5 +29,7 @@ void read_inode(struct inode *in, int inode_num);
 void fill_incore_for_test(void);
 void set_free_in_incore(void);
 void free_all_incore(void);
+struct inode *iget(int inode_num);
+void iput(struct inode *in);
 
 #endif
