@@ -102,8 +102,8 @@ void test_ialloc_no_free_inode(void) {
     unsigned char inode_map[BLOCK_SIZE];
     memset(inode_map, 0xFF, BLOCK_SIZE);
     bwrite(FREE_INODE_MAP_NUM, inode_map);
-    int byte_index = ialloc();
-    CTEST_ASSERT(byte_index == -1, "Testing ialloc when no free inode is available");
+    struct inode *ialloced_inode = ialloc();
+    CTEST_ASSERT(ialloced_inode == NULL, "Testing ialloc when no free inode is available");
 }
 
 void test_ialloc_free_inode_found(void) {
@@ -112,8 +112,15 @@ void test_ialloc_free_inode_found(void) {
     memset(inode_map, 0xFF, BLOCK_SIZE);
     set_free(inode_map, 0, 0);
     bwrite(FREE_INODE_MAP_NUM, inode_map);
-    int byte_index = ialloc();
-    CTEST_ASSERT(byte_index == 0, "Testing allocating an inode");
+    struct inode *ialloced_inode = ialloc();
+    CTEST_ASSERT(ialloced_inode != NULL, "Testing allocating an inode");
+    CTEST_ASSERT(ialloced_inode->flags == 0, "Testing ialloc inode initialization");
+    CTEST_ASSERT(ialloced_inode->owner_id == 0, "Testing ialloc inode initialization");
+    CTEST_ASSERT(ialloced_inode->permissions == 0, "Testing ialloc inode initialization");
+    CTEST_ASSERT(ialloced_inode->size == 0, "Testing ialloc inode initialization");
+    for (int i = 0; i < INODE_PTR_COUNT; i++) {
+        CTEST_ASSERT(ialloced_inode->block_ptr[i] == 0, "Testing read_inode() block pointers");
+    }
 }
 
 void test_alloc_no_free_block(void) {
@@ -202,7 +209,6 @@ void test_read_inode(void) {
     CTEST_ASSERT(in.flags == 8, "Testing read_inode() flags");
     CTEST_ASSERT(in.link_count == 3, "Testing read_inode() link_count");
     for (int i = 0; i < INODE_PTR_COUNT; i++) {
-        fprintf(stderr, "in.block_ptr[%d]: %d\n", i, in.block_ptr[i]);
         CTEST_ASSERT(in.block_ptr[i] == i + 1, "Testing read_inode() block pointers");
     }
 }
