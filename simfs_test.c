@@ -9,6 +9,7 @@
 #include "free.h"
 #include "inode.h"
 #include "mkfs.h"
+#include "pack.h"
 
 #define BLOCK_SIZE 4096
 #define TEST_BLOCK_NUM 3
@@ -153,9 +154,7 @@ void test_mkfs(void) {
         else {
             CTEST_ASSERT(clear_bit_index == 0, "Testing block allocation");
             fprintf(stderr, "clear_bit_index: %d\n", clear_bit_index);
-        }
-        
-        
+        } 
     }
     remove("test");
 }
@@ -176,8 +175,33 @@ void test_find_incore(void) {
     CTEST_ASSERT(find_incore_result == NULL, "Testing failure of find_incore()");
     set_free_in_incore();
     find_incore_result = find_incore(10);
-    CTEST_ASSERT(find_incore_result != NULL, "Testing success of find_incore()");
+    CTEST_ASSERT(find_incore_result->inode_num == 10, "Testing success of find_incore()");
     free_all_incore();
+}
+
+void test_read_inode(void) {
+    struct inode in;
+    int inode_num = 10;
+    int block_num = inode_num / INODES_PER_BLOCK + INODE_FIRST_BLOCK;  
+    unsigned char block[BLOCK_SIZE] = {0};
+    bread(block_num, block);  
+    write_u32(block + inode_num % INODES_PER_BLOCK * INODE_SIZE, 1000); 
+    write_u16(block + inode_num % INODES_PER_BLOCK * INODE_SIZE + 4, 1234); 
+    write_u8(block + inode_num % INODES_PER_BLOCK * INODE_SIZE + 6, 7); 
+    write_u8(block + inode_num % INODES_PER_BLOCK * INODE_SIZE + 7, 8); 
+    write_u8(block + inode_num % INODES_PER_BLOCK * INODE_SIZE + 8, 3);
+    for (int i = 0; i < INODE_PTR_COUNT; i++) {
+        write_u16(block + inode_num % INODES_PER_BLOCK * INODE_SIZE + 11 + (i * 2), i + 1); 
+    }
+    read_inode(&in, inode_num);
+    CTEST_ASSERT(in.size == 1000, "Testing read_inode() size");
+    CTEST_ASSERT(in.owner_id == 1234, "Testing read_inode() owner_id");
+    CTEST_ASSERT(in.permissions == 7, "Testing read_inode() permissions");
+    CTEST_ASSERT(in.flags == 8, "Testing read_inode() flags");
+    CTEST_ASSERT(in.link_count == 3, "Testing read_inode() link_count");
+    for (int i = 0; i < INODE_PTR_COUNT; i++) {
+        CTEST_ASSERT(in.block_ptr[i] == i + 1, "Testing read_inode() block pointers");
+    }
 }
 
 int main(void) {
@@ -210,6 +234,7 @@ int main(void) {
     // inode.c again
     test_find_incore_free();
     test_find_incore();
+    test_read_inode();
 
     CTEST_RESULTS();
 
