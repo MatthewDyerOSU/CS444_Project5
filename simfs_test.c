@@ -193,8 +193,9 @@ void test_read_inode(void) {
     write_u8(block + block_offset_bytes + 7, 8);
     write_u8(block + block_offset_bytes + 8, 3);
     for(int i = 0; i < INODE_PTR_COUNT; i++) {
-        write_u16(block + block_offset_bytes + 11 + (i * 2), i + 1);
+        write_u16(block + block_offset_bytes + 9 + (i * 2), i + 1);
     }
+    bwrite(block_num, block);
     read_inode(&in, inode_num);
     CTEST_ASSERT(in.size == 1000, "Testing read_inode() size");
     CTEST_ASSERT(in.owner_id == 1234, "Testing read_inode() owner_id");
@@ -202,8 +203,13 @@ void test_read_inode(void) {
     CTEST_ASSERT(in.flags == 8, "Testing read_inode() flags");
     CTEST_ASSERT(in.link_count == 3, "Testing read_inode() link_count");
     for (int i = 0; i < INODE_PTR_COUNT; i++) {
+        fprintf(stderr, "in.block_ptr[%d]: %d\n", i, in.block_ptr[i]);
         CTEST_ASSERT(in.block_ptr[i] == i + 1, "Testing read_inode() block pointers");
     }
+}
+
+void test_write_inode(void) {
+    
 }
 
 int main(void) {
@@ -236,7 +242,7 @@ int main(void) {
     // inode.c again
     test_find_incore_free();
     test_find_incore();
-    // test_read_inode();
+    test_read_inode();
 
     CTEST_RESULTS();
 
