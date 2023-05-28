@@ -10,6 +10,7 @@
 #include "inode.h"
 #include "mkfs.h"
 #include "pack.h"
+#include "ls.h"
 
 #define BLOCK_SIZE 4096
 #define TEST_BLOCK_NUM 3
@@ -154,8 +155,12 @@ void test_mkfs(void) {
             exit(EXIT_FAILURE);
         }
         int clear_bit_index = find_low_clear_bit(block[0]);
-        if(i == 2) {
-            CTEST_ASSERT(clear_bit_index == 7, "Testing block allocation");
+        if(i == 1) {
+            CTEST_ASSERT(clear_bit_index == 1, "Testing block allocation");
+            fprintf(stderr, "clear_bit_index: %d\n", clear_bit_index);
+        }
+        else if(i == 2) {
+            CTEST_ASSERT(clear_bit_index == -1, "Testing block allocation");
             fprintf(stderr, "clear_bit_index: %d\n", clear_bit_index);
         }
         else {
@@ -281,6 +286,20 @@ void test_iput(void) {
     }
 }
 
+void test_directory(void) {
+    mkfs();
+    struct directory *dir;
+    struct directory_entry ent;
+
+    dir = directory_open(0);
+
+    while (directory_get(dir, &ent) != -1) {
+        printf("%d %s\n", ent.inode_num, ent.name);
+    }
+
+    directory_close(dir);
+}
+
 int main(void) {
     CTEST_VERBOSE(1);
 
@@ -314,6 +333,8 @@ int main(void) {
     test_read_inode();
     test_write_inode();
     test_iget();
+
+    test_directory();
 
     CTEST_RESULTS();
 
