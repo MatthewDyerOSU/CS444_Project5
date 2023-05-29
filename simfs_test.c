@@ -1,5 +1,6 @@
 #define CTEST_ENABLE
 #include <string.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>

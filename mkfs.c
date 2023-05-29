@@ -9,9 +9,8 @@
 #include "mkfs.h"
 
 #define BLOCK_SIZE 4096
-#define NUM_BLOCKS 1024
-#define DIR_ENTRY_SIZE 32
-#define DIR_NAME_OFFSET 2
+
+
 
 // Call image_open() to open image to use
 // then call mkfs() to create the starting file system in that image

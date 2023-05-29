@@ -1,6 +1,10 @@
 #ifndef MKFS_H
 #define MKFS_H
 
+#define DIR_ENTRY_SIZE 32
+#define DIR_NAME_OFFSET 2
+#define NUM_BLOCKS 1024
+
 struct directory {
     struct inode *inode;
     unsigned int offset;
