@@ -32,6 +32,7 @@ ls.o: ls.c
 
 clean:
 	rm -f *.o
+	rm -f *.a
 
 test: simfs_test
 	./simfs_test
