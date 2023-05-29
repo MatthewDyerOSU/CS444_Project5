@@ -287,16 +287,20 @@ void test_iput(void) {
 }
 
 void test_directory(void) {
-    mkfs();
     struct directory *dir;
     struct directory_entry ent;
 
     dir = directory_open(0);
 
-    while (directory_get(dir, &ent) != -1) {
-        printf("%d %s\n", ent.inode_num, ent.name);
-    }
-
+    directory_get(dir, &ent);
+    CTEST_ASSERT(ent.inode_num == 0, "Testing directory entry inode number");
+    printf("Entry name: %s\n", ent.name);
+    CTEST_ASSERT(strcmp(ent.name, ".") == 0, "Testing directory entry name");
+    directory_get(dir, &ent);
+    CTEST_ASSERT(ent.inode_num == 0, "Testing directory entry inode number");
+    printf("Entry name: %s\n", ent.name);
+    CTEST_ASSERT(strcmp(ent.name, "..") == 0, "Testing directory entry name");
+    
     directory_close(dir);
 }
 
