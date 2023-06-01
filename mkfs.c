@@ -61,6 +61,7 @@ void mkfs(void){
     // initialize root inode
     root_inode->flags = 2;
     root_inode->size = DIR_ENTRY_SIZE * 2;
+    printf("root inode size: %d\n", root_inode->size);
     root_inode->link_count = 1;
     root_inode->block_ptr[0] = block_num;
 
@@ -75,6 +76,7 @@ void mkfs(void){
     strcpy((char *)dir_data_block + (entry_num * DIR_ENTRY_SIZE) + DIR_NAME_OFFSET, "..");
 
     // write the dir data block back out to disk
+    printf("root inode size: %d\n", root_inode->size);
     iput(root_inode);
     bwrite(block_num, dir_data_block);
     
@@ -83,6 +85,9 @@ void mkfs(void){
 struct directory *directory_open(int inode_num) {
     // Use iget() to get the inode for this file. If it fails, return NULL
     struct inode *dir_inode = iget(inode_num);
+    if(dir_inode == NULL) {
+        return NULL;
+    }
 
     // malloc() space for a new struct directory
     struct directory *dir = malloc(sizeof(struct directory));
@@ -116,7 +121,7 @@ int directory_get(struct directory *dir, struct directory_entry *ent) {
 
     // Extract the directory entry from the raw data in the block into the dir entry passed in
     ent->inode_num = read_u16(block + offset_in_block);
-    strcpy(ent->name, (char *) block + offset_in_block + 2);
+    strcpy(ent->name, (char *) block + offset_in_block + DIR_NAME_OFFSET);
 
     dir->offset += DIR_ENTRY_SIZE;
 

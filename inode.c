@@ -4,6 +4,7 @@
 #include "image.h"
 #include "pack.h"
 #include "inode.h"
+#include <stdio.h>
 
 static struct inode incore[MAX_SYS_OPEN_FILES] = {0};
 
@@ -101,6 +102,7 @@ void write_inode(struct inode *in) {
     unsigned char block[BLOCK_SIZE];
 
     write_u32(block + block_offset_bytes, in->size);
+    printf("Inode size in write_inode: %d\n", in->size);
     write_u16(block + block_offset_bytes + 4, in->owner_id);
     write_u8(block + block_offset_bytes + 6, in->permissions);
     write_u8(block + block_offset_bytes + 7, in->flags);
@@ -126,6 +128,9 @@ struct inode *iget(int inode_num) {
         return NULL;
     }
     read_inode(incore_free, inode_num);
+
+    printf("Inode size in iget: %d\n", incore_free->size);
+
     incore_free->ref_count = 1;
     incore_free->inode_num = inode_num;
     return incore_free;
@@ -140,6 +145,7 @@ void iput(struct inode *in) {
     if(in->ref_count == 0) {
         write_inode(in);
     }
+    printf("Inode size in iput: %d\n", in->size);
 }
 
 // Helper functions for testing
@@ -160,4 +166,3 @@ void free_all_incore(void) {
         incore[i].ref_count = 0;
     }
 }
-
