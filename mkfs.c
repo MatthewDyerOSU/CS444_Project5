@@ -61,7 +61,6 @@ void mkfs(void){
     // initialize root inode
     root_inode->flags = 2;
     root_inode->size = DIR_ENTRY_SIZE * 2;
-    printf("root inode size: %d\n", root_inode->size);
     root_inode->link_count = 1;
     root_inode->block_ptr[0] = block_num;
 
@@ -76,7 +75,6 @@ void mkfs(void){
     strcpy((char *)dir_data_block + (entry_num * DIR_ENTRY_SIZE) + DIR_NAME_OFFSET, "..");
 
     // write the dir data block back out to disk
-    printf("root inode size: %d\n", root_inode->size);
     iput(root_inode);
     bwrite(block_num, dir_data_block);
     
