@@ -18,6 +18,8 @@
 #define FREE_INODE_MAP_NUM 1
 #define FREE_BLOCK_MAP_NUM 2
 
+#define TEST_IMAGE "inode_test_image.dat"
+
 #ifdef CTEST_ENABLE
 
 // helper function to generate a block of random bytes
@@ -27,17 +29,30 @@ void generate_block(unsigned char *block, int size) {
     }
 }
 
+void setup(void)
+{
+    image_open(TEST_IMAGE, 1);
+    mkfs();
+}
+
+void teardown(void)
+{
+    image_close();
+    remove(TEST_IMAGE);
+}
+
 void test_non_existent_image_open_and_close(void) {
-    image_fd = image_open("new_test.txt", 0);
+    setup();
     CTEST_ASSERT(image_fd != -1, "Test opening non-existent file");
     CTEST_ASSERT(image_close() != -1, "Test closing newly made file");
-    remove("new_test.txt");
+    teardown();
 }
 
 void test_existing_image_open_and_close(void) {
-    image_fd = image_open("test.txt", 0);
+    setup();
     CTEST_ASSERT(image_fd != -1, "Test opening existing file");
     CTEST_ASSERT(image_close() != -1, "Test closing existing file");
+    teardown();
 }
 
 /// Need truncated image_open testing
@@ -53,7 +68,7 @@ void test_image_close_fail(void) {
 }
 
 void test_bwrite_and_bread(void) {
-    image_fd = image_open("test.txt", 0);
+    setup();
 
     unsigned char *block1 = malloc(BLOCK_SIZE);
     unsigned char *block2 = malloc(BLOCK_SIZE);
@@ -68,48 +83,58 @@ void test_bwrite_and_bread(void) {
 
     free(block1);
     free(block2);
+    teardown();
 }
 
 void test_setting_with_set_free(void) {
+    setup();
     unsigned char block[2] = {0x00, 0x00};
     set_free(block, 0, 1);
     CTEST_ASSERT(block[0] == 0x01, "Testing setting a bit with set_free()");
+    teardown();
 }
 
 void test_clearing_with_set_free(void) {
+    setup();
     unsigned char block[1] = {0xFF};
     set_free(block, 4, 0);
     CTEST_ASSERT(block[0] == 0xEF, "Testing clearing a bit with set_free()");
+    teardown();
 }
 
 void test_find_free_all_bits_set(void) {
+    setup();
     unsigned char *block = malloc(BLOCK_SIZE);
     memset(block, 0xFF, BLOCK_SIZE);
     int free_bit = find_free(block);
     CTEST_ASSERT(free_bit == -1, "Testing find_free when all bits are set");
     free(block);
+    teardown();
 }
 
 void test_find_free_one_bit_clear(void) {
+    setup();
     unsigned char *block = malloc(BLOCK_SIZE);
     memset(block, 0xFF, BLOCK_SIZE);
     block[4] = 0xEF;
     int free_bit = find_free(block);
     CTEST_ASSERT(free_bit == 36, "Testing find_free when 1 bit in the 5th byte is clear");
     free(block);
+    teardown();
 }
 
 void test_ialloc_no_free_inode(void) {
-    image_fd = image_open("test.txt", 0);
+    setup();
     unsigned char inode_map[BLOCK_SIZE];
     memset(inode_map, 0xFF, BLOCK_SIZE);
     bwrite(FREE_INODE_MAP_NUM, inode_map);
     struct inode *ialloced_inode = ialloc();
     CTEST_ASSERT(ialloced_inode == NULL, "Testing ialloc when no free inode is available");
+    teardown();
 }
 
 void test_ialloc_free_inode_found(void) {
-    image_fd = image_open("test.txt", 0);
+    setup();
     unsigned char inode_map[BLOCK_SIZE];
     memset(inode_map, 0xFF, BLOCK_SIZE);
     set_free(inode_map, 0, 0);
@@ -123,30 +148,32 @@ void test_ialloc_free_inode_found(void) {
     for (int i = 0; i < INODE_PTR_COUNT; i++) {
         CTEST_ASSERT(ialloced_inode->block_ptr[i] == 0, "Testing read_inode() block pointers");
     }
+    teardown();
 }
 
 void test_alloc_no_free_block(void) {
-    image_fd = image_open("test.txt", 0);
+    setup();
     unsigned char block_map[BLOCK_SIZE];
     memset(block_map, 0xFF, BLOCK_SIZE);
     bwrite(FREE_BLOCK_MAP_NUM, block_map);
     int byte_index = alloc();
     CTEST_ASSERT(byte_index == -1, "Testing alloc when no free block is available");
+    teardown();
 }
 
 void test_alloc_free_block_found(void) {
-    image_fd = image_open("test.txt", 0);
+    setup();
     unsigned char block_map[BLOCK_SIZE];
     memset(block_map, 0xFF, BLOCK_SIZE);
     set_free(block_map, 0, 0);
     bwrite(FREE_BLOCK_MAP_NUM, block_map);
     int byte_index = alloc();
     CTEST_ASSERT(byte_index == 0, "Testing allocating a block");
+    teardown();
 }
 
 void test_mkfs(void) {
-    image_fd = image_open("test", 0);
-    mkfs();
+    setup();
     unsigned char block[BLOCK_SIZE];
     for(int i = 0; i < 7; i++) {
         off_t block_offset = i * BLOCK_SIZE;
@@ -169,10 +196,11 @@ void test_mkfs(void) {
             fprintf(stderr, "clear_bit_index: %d\n", clear_bit_index);
         } 
     }
-    remove("test");
+    teardown();
 }
 
 void test_find_incore_free(void) {
+    setup();
     fill_incore_for_test();
     struct inode *find_incore_free_result = find_incore_free();
     CTEST_ASSERT(find_incore_free_result == NULL, "Testing failure of find_incore_free()");
@@ -180,18 +208,22 @@ void test_find_incore_free(void) {
     find_incore_free_result = find_incore_free();
     CTEST_ASSERT(find_incore_free_result != NULL, "Testing success of find_incore_free()");
     free_all_incore();
+    teardown();
 }
 
 void test_find_incore(void) {
+    setup();
     struct inode *find_incore_result = find_incore(10);
     CTEST_ASSERT(find_incore_result == NULL, "Testing failure of find_incore()");
     fill_incore_for_test();
     find_incore_result = find_incore(10);
     CTEST_ASSERT(find_incore_result->inode_num == 10, "Testing success of find_incore()");
     free_all_incore();
+    teardown();
 }
 
 void test_read_inode(void) {
+    setup();
     struct inode in;
     int inode_num = 10;
     int block_num = inode_num / INODES_PER_BLOCK + INODE_FIRST_BLOCK;  
@@ -217,9 +249,11 @@ void test_read_inode(void) {
     for (int i = 0; i < INODE_PTR_COUNT; i++) {
         CTEST_ASSERT(in.block_ptr[i] == i + 1, "Testing read_inode() block pointers");
     }
+    teardown();
 }
 
 void test_write_inode(void) {
+    setup();
     struct inode in;
     in.inode_num = 10;
     in.size = 1000;
@@ -245,9 +279,11 @@ void test_write_inode(void) {
     for (int i = 0; i < INODE_PTR_COUNT; i++) {
         CTEST_ASSERT(read_u16(block + block_offset_bytes + 9 + (i * 2)) == i + 1, "Testing write_inode() block pointers");
     }
+    teardown();
 }
 
 void test_iget(void) {
+    setup();
     fill_incore_for_test();
     struct inode *found_incore = iget(9);
     CTEST_ASSERT(found_incore != NULL, "Testing iget() with full incore array");
@@ -256,9 +292,11 @@ void test_iget(void) {
     struct inode *new_incore = iget(9);
     CTEST_ASSERT(new_incore != NULL, "Testing iget() with empty incore array");
     CTEST_ASSERT(new_incore->ref_count == 1, "Testing iget() ref_count incrementing for newly allocated inode");
+    teardown();
 }
 
 void test_iput(void) {
+    setup();
     struct inode in;
     in.inode_num = 10;
     in.size = 1000;
@@ -285,31 +323,34 @@ void test_iput(void) {
     for (int i = 0; i < INODE_PTR_COUNT; i++) {
         CTEST_ASSERT(read_u16(block + block_offset_bytes + 9 + (i * 2)) == i + 1, "Testing iput() block pointers");
     }
+    teardown();
 }
 
 void test_directory(void) {
+    setup();
     struct directory *dir;
     struct directory_entry ent;
 
     dir = directory_open(0);
 
-    // directory_get(dir, &ent);
-    // CTEST_ASSERT(ent.inode_num == 0, "Testing directory entry inode number");
-    // printf("Entry name: %s\n", ent.name);
-    // CTEST_ASSERT(strcmp(ent.name, ".") == 0, "Testing directory entry name");
-    // directory_get(dir, &ent);
-    // CTEST_ASSERT(ent.inode_num == 0, "Testing directory entry inode number");
-    // printf("Entry name: %s\n", ent.name);
-    // CTEST_ASSERT(strcmp(ent.name, "..") == 0, "Testing directory entry name");
+    directory_get(dir, &ent);
+    CTEST_ASSERT(ent.inode_num == 0, "Testing directory entry inode number");
+    printf("Entry name: %s\n", ent.name);
+    CTEST_ASSERT(strcmp(ent.name, ".") == 0, "Testing directory entry name");
+    directory_get(dir, &ent);
+    CTEST_ASSERT(ent.inode_num == 0, "Testing directory entry inode number");
+    printf("Entry name: %s\n", ent.name);
+    CTEST_ASSERT(strcmp(ent.name, "..") == 0, "Testing directory entry name");
 
-    while (directory_get(dir, &ent) != -1) {
-        printf("%d %s\n", ent.inode_num, ent.name);
-        printf("Offset: %d\n", dir->offset);
-        printf("Size: %d\n", dir->inode->size);
-        break;
-    }
+    // while (directory_get(dir, &ent) != -1) {
+    //     printf("%d %s\n", ent.inode_num, ent.name);
+    //     printf("Offset: %d\n", dir->offset);
+    //     printf("Size: %d\n", dir->inode->size);
+    //     break;
+    // }
     
     directory_close(dir);
+    teardown();
 }
 
 int main(void) {
