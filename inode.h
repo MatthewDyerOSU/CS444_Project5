@@ -7,6 +7,7 @@
 #define INODE_FIRST_BLOCK 3
 #define FREE_INODE_MAP_NUM 1 
 #define INODES_PER_BLOCK (BLOCK_SIZE / INODE_SIZE)
+#define ROOT_INODE_NUM 0
 
 
 struct inode {
@@ -28,6 +29,7 @@ void read_inode(struct inode *in, int inode_num);
 void write_inode(struct inode *in);
 struct inode *iget(int inode_num);
 void iput(struct inode *in);
+struct inode *namei(char *path);
 
 //testing
 void fill_incore_for_test(void);

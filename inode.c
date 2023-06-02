@@ -144,6 +144,14 @@ void iput(struct inode *in) {
     }
 }
 
+struct inode *namei(char *path) {
+    struct inode *root_inode = iget(ROOT_INODE_NUM);
+    if (root_inode == NULL) {
+        return NULL;
+    }
+    return root_inode;
+}
+
 // Helper functions for testing
 void fill_incore_for_test(void) {
     for(int i = 0; i < MAX_SYS_OPEN_FILES; i++) {

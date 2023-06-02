@@ -342,6 +342,13 @@ void test_directory(void) {
     teardown();
 }
 
+void test_namei(void) {
+    setup();
+    struct inode *root_inode = namei("/");
+    CTEST_ASSERT(root_inode->inode_num == 0, "namei should return the root inode with inode number 0");
+    teardown();
+}
+
 int main(void) {
     CTEST_VERBOSE(1);
 
@@ -369,14 +376,18 @@ int main(void) {
     // mkfs.c - mkfs()
     test_mkfs();
 
-    // inode.c again
+    // inode.c - find_incore_free(), find_incore(), read_inode(), write_inode(), iget(), iput()
     test_find_incore_free();
     test_find_incore();
     test_read_inode();
     test_write_inode();
     test_iget();
 
+    // mkfs.c - directory_open(), directory_get(), directory_close()
     test_directory();
+
+    // inode.c - namei()
+    test_namei();
 
     CTEST_RESULTS();
 
