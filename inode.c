@@ -145,6 +145,7 @@ void iput(struct inode *in) {
 }
 
 struct inode *namei(char *path) {
+    (void)path;
     struct inode *root_inode = iget(ROOT_INODE_NUM);
     if (root_inode == NULL) {
         return NULL;

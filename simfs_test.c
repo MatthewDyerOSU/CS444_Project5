@@ -12,6 +12,7 @@
 #include "mkfs.h"
 #include "pack.h"
 #include "ls.h"
+#include "dir.h"
 
 #define BLOCK_SIZE 4096
 #define TEST_BLOCK_NUM 3
@@ -349,6 +350,23 @@ void test_namei(void) {
     teardown();
 }
 
+void test_directory_make(void) {
+    setup();
+    struct directory *dir;
+    struct directory_entry ent;
+
+    directory_make("/foo");
+    dir = directory_open(0);
+    directory_get(dir, &ent);
+    directory_get(dir, &ent);
+    directory_get(dir, &ent);
+    CTEST_ASSERT(ent.inode_num == 1, "Testing directory entry inode number after directory_make");
+    CTEST_ASSERT(strcmp(ent.name, "foo") == 0, "Testing directory entry name after directory_make");
+
+    directory_close(dir);
+    teardown();
+}
+
 int main(void) {
     CTEST_VERBOSE(1);
 
@@ -388,6 +406,9 @@ int main(void) {
 
     // inode.c - namei()
     test_namei();
+
+    // dir.c - directory_make()
+    test_directory_make();
 
     CTEST_RESULTS();
 
